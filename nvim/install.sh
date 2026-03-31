@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -e
 
 cd "$(dirname "$0")"
@@ -32,7 +33,24 @@ fi
 
 # --- Language deps ---
 command -v node >/dev/null && npm install -g prettier
-command -v python3 >/dev/null && python3 -m pip install --user pynvim
+
+# --- Python (uv + pynvim) ---
+if ! command -v uv >/dev/null 2>&1; then
+  if command -v brew >/dev/null 2>&1; then
+    brew install uv
+  else
+    curl -Ls https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+  fi
+fi
+
+# create isolated env for neovim
+UV_ENV="$HOME/.venvs/neovim"
+if [ ! -d "$UV_ENV" ]; then
+  uv venv "$UV_ENV"
+fi
+
+uv pip install --python "$UV_ENV/bin/python" pynvim
 
 # --- Link config ---
 mkdir -p ~/.config

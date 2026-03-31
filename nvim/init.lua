@@ -4,6 +4,8 @@ vim.g.mapleader = " "
 -- ─── Options ────────────────────────────────────────────────────
 vim.opt.clipboard = "unnamedplus"
 
+vim.g.python3_host_prog = "~/.venvs/neovim/bin/python"
+
 vim.opt.number = true
 vim.opt.relativenumber = true
 
@@ -54,6 +56,7 @@ require("lazy").setup({
 					javascript = { "prettier" },
 					html = { "prettier" },
 					json = { "prettier" },
+					bash = { "bashls" },
 				},
 
 				format_on_save = {
@@ -131,13 +134,13 @@ require("lazy").setup({
 		dependencies = { "williamboman/mason.nvim" },
 		config = function()
 			require("mason-lspconfig").setup({
-				ensure_installed = { "pyright", "lua_ls" },
+				ensure_installed = { "pyright", "lua_ls", "ts_ls","bashls" },
 				automatic_installation = true,
 			})
 		end,
 	},
 
-	-- LSP
+	-- LSP Config
 	{
 		"neovim/nvim-lspconfig",
 		dependencies = {
@@ -146,13 +149,25 @@ require("lazy").setup({
 		},
 
 		config = function()
+			local lspconfig = require("lspconfig")
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-			vim.lsp.config("pyright", {
+			-- Explicitly setup pyright with capabilities
+			lspconfig.pyright.setup({
 				capabilities = capabilities,
 			})
 
-			vim.lsp.config("lua_ls", {
+			-- Add this for JavaScript/TypeScript
+			lspconfig.ts_ls.setup({
+				capabilities = capabilities,
+			})
+
+			lspconfig.bashls.setup({
+				capabilities = capabilities,
+			})
+
+			-- Explicitly setup lua_ls
+			lspconfig.lua_ls.setup({
 				capabilities = capabilities,
 				settings = {
 					Lua = {
@@ -161,8 +176,7 @@ require("lazy").setup({
 				},
 			})
 
-			vim.lsp.enable({ "pyright", "lua_ls" })
-
+			-- Your existing LspAttach autocmd for keymaps is perfect
 			vim.api.nvim_create_autocmd("LspAttach", {
 				callback = function(args)
 					local buf = args.buf
